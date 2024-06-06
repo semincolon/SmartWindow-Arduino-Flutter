@@ -11,6 +11,17 @@
 
 <기타 내용>
 - 블루투스로 열고 닫기를 하면 환기모드 자동 Off
+
+<Message Code>
+- 1 : 아두이노와 연결되었음을 의미
+- 10 : 창문을 열었음을 의미
+  - 11 : 실내 대기질이 나빠서 창문을 열었음을 의미
+  - 12 : 화재가 발생해서 창문을 열었음을 의미
+- 20 : 창문을 닫았음을 의미
+  - 21 : 비가 와서 창문을 닫았음을 의미
+  - 22 : 미세먼지가 나빠서 창문을 닫았음을 의미
+- 30 : 자동 모드가 켜졌음을 의미
+- 31 : 자동 모드가 꺼졌음을 의미
 */
 
 #include <SoftwareSerial.h>  // 블루투스 시리얼 통신 라이브러리 추가
@@ -80,27 +91,53 @@ void setup() {
 void loop() {
   // 모터 작동 코드
   if (BTSerial.available()) { // 블루투스로 개폐 명령을 받으면 환기 모드(auto_mode)를 비활성화
-    auto_mode = false; // 환기 모드 비활성화
+    String data = BTSerial.readString();
 
-    byte data = BTSerial.read();
-    switch(data) {
-      case '1': // 창문 열기
-        open_window();
-        break;
-      case '2': // 창문 닫기
-        close_window();
-        break;
-      case '3': // 환기모드 활성화
-        auto_mode = true;
-        Serial.println("환기모드 활성화");
-        break;
-      case '4': // 환기모드 비활성화
-        auto_mode = false;
-        Serial.println("환기모드 비활성화");
-        break;
-      default: // 1, 2 외의 전송된 값은 그냥 출력함(임시. 없어도 되는 부분임.)
-        Serial.write(data);
+    if (data == "OK+CONN") {
+      Serial.println("연결됨");
+      send_message(1);
+    } 
+    else if (data == "OK+LOST") {
+      Serial.println("연결해제됨");
+    } 
+    else if (data == "OPEN") {
+      open_window(10);
+      Serial.println("창문을 열었습니다");
+    } 
+    else if (data == "CLOSE") {
+      close_window(20);
+      Serial.println("창문을 닫았습니다");
+    } 
+    else if (data == "ON") {
+      auto_mode = true;
+      Serial.println("자동모드 ON");
+      send_message(30);
+    } 
+    else if (data == "OFF") {
+      auto_mode = false;
+      Serial.println("자동모드 OFF");
+      send_message(31);
     }
+
+    // 앱 개발 전, 기존 앱을 사용하여 1, 2 등의 숫자를 전송하며 테스트해볼 때 사용하던 명령어 부분
+    // switch(data) {
+    //   case '1': // 창문 열기
+    //     open_window();
+    //     break;
+    //   case '2': // 창문 닫기
+    //     close_window();
+    //     break;
+    //   case '3': // 환기모드 활성화
+    //     auto_mode = true;
+    //     Serial.println("환기모드 활성화");
+    //     break;
+    //   case '4': // 환기모드 비활성화
+    //     auto_mode = false;
+    //     Serial.println("환기모드 비활성화");
+    //     break;
+    //   default: // 1, 2 외의 전송된 값은 그냥 출력함(임시. 없어도 되는 부분임.)
+    //     Serial.write(data);
+    // }
   }
 
   // 환기 모드가 활성화 된 상태여야지만 센서를 작동시킴
@@ -135,18 +172,22 @@ void loop() {
 
     if (is_open == true) { // 창문이 열려있다면 이 부분이 실행[창문을 닫을 조건을 확인]
       // 비가 오거나 실외 미세먼지가 많다면 창문을 닫음
-      if (is_rain == true || is_pollute_out == true) {
-        close_window();
+      if (is_rain == true) {
+        close_window(21); // 21 : 비 내리는 중
+      } 
+      else if (is_pollute_out == true) {
+        close_window(22); // 22 : 미세먼지 나쁨
       }
-    } else { // 창문이 닫혀있다면 이 부분이 실행[창문을 열 조건을 확인]
+    } 
+    else { // 창문이 닫혀있다면 이 부분이 실행[창문을 열 조건을 확인]
       // 실내에 불이 났다면 비가 오든 미세먼지가 안좋든 무조건 창문을 열음
       if (is_fire == true) {
         Serial.println("실내 화재 발생");
-        open_window();
+        open_window(12);
       } else {
         // 불이 나지 않았다면 1. 밖에 비가 안오고, 2. 실외 미세먼지가 좋고, 3. 실내 대기질이 나쁘면 창문을 열음
         if (is_rain == false and is_pollute_out == false and is_pollute_in == true) {
-          open_window();
+          open_window(11);
         }
       }
     }
@@ -156,27 +197,24 @@ void loop() {
 }
 
 // 스마트폰으로 메시지 전송
-void send_open_message() {
-  BTSerial.write("window_open");
-}
-
-// 스마트폰으로 메시지 전송
-void send_close_message() {
-  BTSerial.write("window_close");
+void send_message(int code) {
+  BTSerial.write(code);
+  BTSerial.write(is_open);
+  BTSerial.write(auto_mode);
 }
 
 // 창문 여는 함수
-void open_window() {
+void open_window(int code) {
   Serial.println("창문을 열었습니다.");
   myStepper.step(-stepsmotor);
   is_open = true;
-  send_open_message();
+  send_message(code);
 }
 
 // 창문 닫는 함수
-void close_window() {
+void close_window(int code) {
   Serial.println("창문을 닫았습니다.");
   myStepper.step(stepsmotor);
   is_open = false;
-  send_close_message();
+  send_message(code);
 }

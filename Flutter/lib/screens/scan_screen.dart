@@ -5,7 +5,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({Key? key}) : super(key: key);
+  const ScanScreen({super.key});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -33,7 +33,7 @@ class _ScanScreenState extends State<ScanScreen> {
     _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
       _scanResults = [];
       for (ScanResult r in results) {
-        if (r.device.platformName.isNotEmpty && r.advertisementData.connectable == true) {
+        if (r.device.platformName.isNotEmpty && r.device.platformName == "SmartWindow" && r.advertisementData.connectable == true) {
           _scanResults.add(r);
         }
       }
@@ -240,6 +240,7 @@ class _ScanScreenState extends State<ScanScreen> {
         backgroundColor: Colors.red,
       );
     } finally {
+      // Dialog 비활성화
       Navigator.pop(context);
     }
   }

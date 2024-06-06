@@ -7,7 +7,7 @@ class ChatMessage extends StatelessWidget {
   final String text; // 출력할 메시지
   final AnimationController animationController; // 리스트뷰에 등록될 때 보여질 효과
 
-  ChatMessage({required this.text, required this.animationController});
+  const ChatMessage({super.key, required this.text, required this.animationController});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class ChatMessage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   // 사용자명을 subhead 테마로 출력
-                  Text(_name, style: Theme.of(context).textTheme.subtitle1),
+                  Text(_name, style: Theme.of(context).textTheme.titleMedium),
                   // 입력받은 메시지 출력
                   Container(
                     margin: const EdgeInsets.only(top: 5.0),

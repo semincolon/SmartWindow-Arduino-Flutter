@@ -9,6 +9,8 @@ import 'package:smart_window/screens/device_control_screen.dart';
 import 'package:smart_window/screens/home_screen.dart';
 import 'package:smart_window/screens/scan_screen.dart';
 
+import 'flutterLocalNotification.dart';
+
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -32,9 +34,8 @@ Future<void> main() async {
   runApp(const SmartWindowApp());
 }
 
-
 class SmartWindowApp extends StatefulWidget {
-  const SmartWindowApp({Key? key}) : super(key: key);
+  const SmartWindowApp({super.key});
 
   @override
   State<SmartWindowApp> createState() => _SmartWindowAppState();
@@ -47,7 +48,9 @@ class _SmartWindowAppState extends State<SmartWindowApp> {
 
   @override
   void initState() {
-    super.initState();
+    FlutterLocalNotification.init();
+    FlutterLocalNotification.requestNotificationPermission();
+
     FocusManager.instance.primaryFocus?.unfocus();
     _adapterStateStateSubscription = FlutterBluePlus.adapterState.listen((state) {
           _adapterState = state;
@@ -55,6 +58,8 @@ class _SmartWindowAppState extends State<SmartWindowApp> {
             setState(() => {});
           }
         });
+
+    super.initState();
   }
 
   @override
