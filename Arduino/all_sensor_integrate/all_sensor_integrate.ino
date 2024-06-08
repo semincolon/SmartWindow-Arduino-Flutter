@@ -101,10 +101,12 @@ void loop() {
       Serial.println("연결해제됨");
     } 
     else if (data == "OPEN") {
+      auto_mode = false;
       open_window(10);
       Serial.println("창문을 열었습니다");
     } 
     else if (data == "CLOSE") {
+      auto_mode = false;
       close_window(20);
       Serial.println("창문을 닫았습니다");
     } 
@@ -118,30 +120,11 @@ void loop() {
       Serial.println("자동모드 OFF");
       send_message(31);
     }
-
-    // 앱 개발 전, 기존 앱을 사용하여 1, 2 등의 숫자를 전송하며 테스트해볼 때 사용하던 명령어 부분
-    // switch(data) {
-    //   case '1': // 창문 열기
-    //     open_window();
-    //     break;
-    //   case '2': // 창문 닫기
-    //     close_window();
-    //     break;
-    //   case '3': // 환기모드 활성화
-    //     auto_mode = true;
-    //     Serial.println("환기모드 활성화");
-    //     break;
-    //   case '4': // 환기모드 비활성화
-    //     auto_mode = false;
-    //     Serial.println("환기모드 비활성화");
-    //     break;
-    //   default: // 1, 2 외의 전송된 값은 그냥 출력함(임시. 없어도 되는 부분임.)
-    //     Serial.write(data);
-    // }
   }
 
   // 환기 모드가 활성화 된 상태여야지만 센서를 작동시킴
   if (auto_mode == true) {
+    Serial.println("Auto ON");
     // 우적 센서
     if(analogRead(A0) < 190){ // 빗물 X , 190은 임의적으로 정한 수치임
       is_rain = false;
@@ -167,6 +150,7 @@ void loop() {
         }
       } else {
         is_pollute_in = false;
+        is_fire = false;
       }
     }
 
@@ -205,16 +189,16 @@ void send_message(int code) {
 
 // 창문 여는 함수
 void open_window(int code) {
-  Serial.println("창문을 열었습니다.");
-  myStepper.step(-stepsmotor);
+  Serial.println("***OPEN***");
   is_open = true;
   send_message(code);
+  myStepper.step(-stepsmotor);
 }
 
 // 창문 닫는 함수
 void close_window(int code) {
-  Serial.println("창문을 닫았습니다.");
-  myStepper.step(stepsmotor);
+  Serial.println("***CLOSE***");
   is_open = false;
   send_message(code);
+  myStepper.step(stepsmotor);
 }
