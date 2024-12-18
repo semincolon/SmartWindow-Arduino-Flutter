@@ -331,6 +331,16 @@ class _DeviceControlScreen extends State<DeviceControlScreen> with TickerProvide
           showToastMessage(true, "자동 모드가 꺼졌습니다");
           FlutterLocalNotification.showNotification('스마트 창문', "자동 모드가 꺼졌습니다");
           break;
+        case 40:
+          print("UNO R3 >> 수동으로 창문 OPEN");
+          showToastMessage(true, "수동으로 창문이 열렸습니다.");
+          FlutterLocalNotification.showNotification('스마트 창문', '수동으로 창문이 열렸습니다');
+          break;
+        case 41:
+          print("UNO R3 >> 수동으로 창문 CLOSE");
+          showToastMessage(true, "수동으로 창문이 닫혔습니다.");
+          FlutterLocalNotification.showNotification('스마트 창문', '수동으로 창문이 닫혔습니다');
+          break;
         default:
           FlutterLocalNotification.showNotification('스마트 창문', 'Uno R3 sends something');
       }
